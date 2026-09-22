@@ -2,6 +2,7 @@ package com.factotum8.networking4jandroid.di
 
 import android.content.Context
 import androidx.room.Room
+import com.factotum8.networking4jandroid.data.local.dao.ActionDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactCommunityCrossRefDao
@@ -12,10 +13,12 @@ import com.factotum8.networking4jandroid.data.local.dao.ContactInterestCrossRefD
 import com.factotum8.networking4jandroid.data.local.dao.ContactProjectCrossRefDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactTagCrossRefDao
 import com.factotum8.networking4jandroid.data.local.dao.EventDao
+import com.factotum8.networking4jandroid.data.local.dao.InteractionDao
 import com.factotum8.networking4jandroid.data.local.dao.InterestDao
 import com.factotum8.networking4jandroid.data.local.dao.KnowsDao
 import com.factotum8.networking4jandroid.data.local.dao.ProjectDao
 import com.factotum8.networking4jandroid.data.local.dao.RelativeDao
+import com.factotum8.networking4jandroid.data.local.dao.SettingsDao
 import com.factotum8.networking4jandroid.data.local.dao.TagDao
 import com.factotum8.networking4jandroid.data.local.db.AppDatabase
 import dagger.Module
@@ -84,4 +87,13 @@ object DatabaseModule {
 
     @Provides
     fun provideKnowsDao(database: AppDatabase): KnowsDao = database.knowsDao()
+
+    @Provides
+    fun provideActionDao(database: AppDatabase): ActionDao = database.actionDao()
+
+    @Provides
+    fun provideInteractionDao(database: AppDatabase): InteractionDao = database.interactionDao()
+
+    @Provides
+    fun provideSettingsDao(database: AppDatabase): SettingsDao = database.settingsDao()
 }

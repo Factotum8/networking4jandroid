@@ -3,6 +3,7 @@ package com.factotum8.networking4jandroid.data.local.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.factotum8.networking4jandroid.data.local.dao.ActionDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactCommunityCrossRefDao
@@ -13,11 +14,14 @@ import com.factotum8.networking4jandroid.data.local.dao.ContactInterestCrossRefD
 import com.factotum8.networking4jandroid.data.local.dao.ContactProjectCrossRefDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactTagCrossRefDao
 import com.factotum8.networking4jandroid.data.local.dao.EventDao
+import com.factotum8.networking4jandroid.data.local.dao.InteractionDao
 import com.factotum8.networking4jandroid.data.local.dao.InterestDao
 import com.factotum8.networking4jandroid.data.local.dao.KnowsDao
 import com.factotum8.networking4jandroid.data.local.dao.ProjectDao
 import com.factotum8.networking4jandroid.data.local.dao.RelativeDao
+import com.factotum8.networking4jandroid.data.local.dao.SettingsDao
 import com.factotum8.networking4jandroid.data.local.dao.TagDao
+import com.factotum8.networking4jandroid.data.local.entity.ActionEntity
 import com.factotum8.networking4jandroid.data.local.entity.CommunityEntity
 import com.factotum8.networking4jandroid.data.local.entity.CompanyEntity
 import com.factotum8.networking4jandroid.data.local.entity.ContactCommunityCrossRef
@@ -28,10 +32,12 @@ import com.factotum8.networking4jandroid.data.local.entity.ContactInterestCrossR
 import com.factotum8.networking4jandroid.data.local.entity.ContactProjectCrossRef
 import com.factotum8.networking4jandroid.data.local.entity.ContactTagCrossRef
 import com.factotum8.networking4jandroid.data.local.entity.EventEntity
+import com.factotum8.networking4jandroid.data.local.entity.InteractionEntity
 import com.factotum8.networking4jandroid.data.local.entity.InterestEntity
 import com.factotum8.networking4jandroid.data.local.entity.KnowsEntity
 import com.factotum8.networking4jandroid.data.local.entity.ProjectEntity
 import com.factotum8.networking4jandroid.data.local.entity.RelativeEntity
+import com.factotum8.networking4jandroid.data.local.entity.SettingsEntity
 import com.factotum8.networking4jandroid.data.local.entity.TagEntity
 
 @Database(
@@ -51,6 +57,9 @@ import com.factotum8.networking4jandroid.data.local.entity.TagEntity
         ContactInterestCrossRef::class,
         ContactTagCrossRef::class,
         KnowsEntity::class,
+        ActionEntity::class,
+        InteractionEntity::class,
+        SettingsEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -72,6 +81,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun contactInterestCrossRefDao(): ContactInterestCrossRefDao
     abstract fun contactTagCrossRefDao(): ContactTagCrossRefDao
     abstract fun knowsDao(): KnowsDao
+    abstract fun actionDao(): ActionDao
+    abstract fun interactionDao(): InteractionDao
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
         const val DATABASE_NAME = "networking4j.db"

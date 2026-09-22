@@ -28,4 +28,7 @@ interface RelativeDao {
 
     @Query("SELECT * FROM relatives")
     fun getAll(): Flow<List<RelativeEntity>>
+
+    @Query("SELECT * FROM relatives")
+    suspend fun getAllOnce(): List<RelativeEntity>
 }

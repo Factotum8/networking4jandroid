@@ -23,6 +23,12 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun getById(id: String): EventEntity?
 
+    @Query("SELECT * FROM events WHERE name = :name")
+    suspend fun getByName(name: String): EventEntity?
+
     @Query("SELECT * FROM events")
     fun getAll(): Flow<List<EventEntity>>
+
+    @Query("SELECT * FROM events")
+    suspend fun getAllOnce(): List<EventEntity>
 }

@@ -23,6 +23,13 @@ interface CompanyDao {
     @Query("SELECT * FROM companies WHERE id = :id")
     suspend fun getById(id: String): CompanyEntity?
 
+    /** Exact, case-sensitive match — `get_or_create` is scoped per dimension type, no cross-type reuse. */
+    @Query("SELECT * FROM companies WHERE name = :name")
+    suspend fun getByName(name: String): CompanyEntity?
+
     @Query("SELECT * FROM companies")
     fun getAll(): Flow<List<CompanyEntity>>
+
+    @Query("SELECT * FROM companies")
+    suspend fun getAllOnce(): List<CompanyEntity>
 }

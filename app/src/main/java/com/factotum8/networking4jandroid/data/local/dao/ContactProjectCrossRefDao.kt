@@ -18,4 +18,10 @@ interface ContactProjectCrossRefDao {
 
     @Query("SELECT * FROM contact_project_cross_refs WHERE contactId = :contactId")
     fun getForContact(contactId: String): Flow<List<ContactProjectCrossRef>>
+
+    @Query("SELECT * FROM contact_project_cross_refs WHERE contactId = :contactId")
+    suspend fun getForContactOnce(contactId: String): List<ContactProjectCrossRef>
+
+    @Query("SELECT * FROM contact_project_cross_refs")
+    suspend fun getAllOnce(): List<ContactProjectCrossRef>
 }

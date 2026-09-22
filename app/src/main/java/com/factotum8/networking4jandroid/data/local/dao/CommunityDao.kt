@@ -23,6 +23,12 @@ interface CommunityDao {
     @Query("SELECT * FROM communities WHERE id = :id")
     suspend fun getById(id: String): CommunityEntity?
 
+    @Query("SELECT * FROM communities WHERE name = :name")
+    suspend fun getByName(name: String): CommunityEntity?
+
     @Query("SELECT * FROM communities")
     fun getAll(): Flow<List<CommunityEntity>>
+
+    @Query("SELECT * FROM communities")
+    suspend fun getAllOnce(): List<CommunityEntity>
 }

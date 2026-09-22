@@ -23,6 +23,12 @@ interface InterestDao {
     @Query("SELECT * FROM interests WHERE id = :id")
     suspend fun getById(id: String): InterestEntity?
 
+    @Query("SELECT * FROM interests WHERE name = :name")
+    suspend fun getByName(name: String): InterestEntity?
+
     @Query("SELECT * FROM interests")
     fun getAll(): Flow<List<InterestEntity>>
+
+    @Query("SELECT * FROM interests")
+    suspend fun getAllOnce(): List<InterestEntity>
 }

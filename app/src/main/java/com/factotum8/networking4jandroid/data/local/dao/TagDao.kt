@@ -23,6 +23,12 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE id = :id")
     suspend fun getById(id: String): TagEntity?
 
+    @Query("SELECT * FROM tags WHERE name = :name")
+    suspend fun getByName(name: String): TagEntity?
+
     @Query("SELECT * FROM tags")
     fun getAll(): Flow<List<TagEntity>>
+
+    @Query("SELECT * FROM tags")
+    suspend fun getAllOnce(): List<TagEntity>
 }
