@@ -30,8 +30,9 @@
 ## 4. Профиль разработчика
 
 - [x] Имя разработчика (публично видно в Store)
-- [x] Контактный email — `[email removed]` (тот же, что в
-      Privacy Policy — [`docs/privacy-policy.html`](./privacy-policy.html))
+- [x] Контактный email (в репозитории не храним; в Privacy Policy —
+      [`docs/privacy-policy-en.html`](../docs/privacy-policy-en.html) —
+      контакт через GitHub Issues)
 - [x] Телефон
 
 ## 5. Верификация личности — **самый долгий шаг, начать в первую очередь**
@@ -50,9 +51,9 @@
 
 ## 7. Обязательные разделы App content (заполняются до первого релиза)
 
-- [ ] **Privacy Policy URL** — после включения GitHub Pages:
-      `https://factotum8.github.io/networking4jandroid/privacy-policy.html`
-      (или `-en.html` для английской версии)
+- [ ] **Privacy Policy URL** — GitHub Pages (ветка `main`, папка `/docs`;
+      в `docs/` лежат только страницы политики):
+      `https://factotum8.github.io/networking4jandroid/privacy-policy-en.html`
 - [ ] **Data safety** — форма о данных (у нас: данные не собираются и не
       передаются, всё хранится локально)
 - [ ] **Content rating** questionnaire (IARC)
