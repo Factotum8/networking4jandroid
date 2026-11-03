@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Upload-key signing comes from env vars injected by scripts/bundle-release.sh
+// (password from 1Password via `op run`); debug builds and tests don't need it.
+val releaseSigning = ReleaseSigning.resolve(
+    keystorePath = providers.environmentVariable(ReleaseSigning.KEYSTORE_ENV).orNull,
+    password = providers.environmentVariable(ReleaseSigning.PASSWORD_ENV).orNull,
+    fileExists = { file(it).isFile },
+)
+val configuredReleaseSigning = releaseSigning as? ReleaseSigning.Result.Configured
+
 android {
     namespace = "com.factotum8.networking4jandroid"
     compileSdk = 35
@@ -18,8 +27,22 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (configuredReleaseSigning != null) {
+            create("release") {
+                storeFile = file(configuredReleaseSigning.keystorePath)
+                storePassword = configuredReleaseSigning.password
+                keyAlias = ReleaseSigning.KEY_ALIAS
+                keyPassword = configuredReleaseSigning.password
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (configuredReleaseSigning != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -41,6 +64,17 @@ android {
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// Without the upload key, fail only the tasks that sign release artifacts
+// (APK packaging / AAB signing) instead of shipping an unsigned build.
+if (releaseSigning is ReleaseSigning.Result.Missing) {
+    val message = releaseSigning.message
+    val checkReleaseSigning = tasks.register("checkReleaseSigning") {
+        doLast { throw GradleException(message) }
+    }
+    tasks.matching { it.name == "packageRelease" || it.name == "signReleaseBundle" }
+        .configureEach { dependsOn(checkReleaseSigning) }
 }
 
 dependencies {

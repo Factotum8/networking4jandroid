@@ -62,9 +62,10 @@
 
 ## 8. Загрузка сборки во внутренний тест
 
-- [ ] Настроить `signingConfig` в `app/build.gradle.kts` (keystore) —
-      отдельная задача, ещё не сделана в коде
-- [ ] Собрать `.aab`: `./gradlew bundleRelease`
+- [x] Настроить `signingConfig` в `app/build.gradle.kts` (upload keystore,
+      пароль из 1Password, хранилище `networking4j`)
+- [x] Собрать `.aab`: `./scripts/bundle-release.sh` →
+      `app/build/outputs/bundle/release/app-release.aab`
 - [ ] Загрузить в **Internal testing** track
 - [ ] Добавить себя как тестировщика по email
 - [ ] Открыть ссылку-приглашение на телефоне → принять → установить через

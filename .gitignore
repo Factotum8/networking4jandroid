@@ -14,4 +14,10 @@
 .cxx
 local.properties
 app/build/
+buildSrc/build/
 app/schemas/
+
+# Local working plan, not versioned
+/PLAN.md
+/keystore-setup.sh
+/release.env
