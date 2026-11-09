@@ -17,13 +17,13 @@ val configuredReleaseSigning = releaseSigning as? ReleaseSigning.Result.Configur
 
 android {
     namespace = "com.factotum8.networking4jandroid"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.factotum8.networking4jandroid"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
+        targetSdk = 36
+        versionCode = 2
         versionName = "0.1.0"
     }
 
