@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.factotum8.networking4jandroid.data.local.dao.ActionDao
+import com.factotum8.networking4jandroid.data.local.dao.BackupRestoreDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactCommunityCrossRefDao
@@ -84,6 +85,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun actionDao(): ActionDao
     abstract fun interactionDao(): InteractionDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun backupRestoreDao(): BackupRestoreDao
 
     companion object {
         const val DATABASE_NAME = "networking4j.db"

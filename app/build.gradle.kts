@@ -92,6 +92,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // JSON tree parsing for the desktop-backup import (no @Serializable classes, so no serialization plugin needed).
+    implementation(libs.kotlinx.serialization.json)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 

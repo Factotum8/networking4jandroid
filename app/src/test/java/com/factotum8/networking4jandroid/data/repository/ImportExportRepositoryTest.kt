@@ -1,5 +1,7 @@
 package com.factotum8.networking4jandroid.data.repository
 
+import com.factotum8.networking4jandroid.data.io.BackupFormatException
+import com.factotum8.networking4jandroid.data.local.dao.BackupRestoreDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.EventDao
@@ -47,6 +49,7 @@ class ImportExportRepositoryTest {
     private val projectDao = mockk<ProjectDao>()
     private val interestDao = mockk<InterestDao>()
     private val tagDao = mockk<TagDao>()
+    private val backupRestoreDao = mockk<BackupRestoreDao>(relaxUnitFun = true)
 
     private lateinit var repository: ImportExportRepository
 
@@ -66,6 +69,7 @@ class ImportExportRepositoryTest {
             projectDao = projectDao,
             interestDao = interestDao,
             tagDao = tagDao,
+            backupRestoreDao = backupRestoreDao,
         )
     }
 
@@ -189,5 +193,28 @@ class ImportExportRepositoryTest {
         assertTrue(backup.contactsCsv.contains("Active"))
         assertTrue(backup.contactsCsv.contains("Archived"))
         coVerify(exactly = 1) { actionRepository.listDue(before = LocalDate.MAX, includeCompleted = true) }
+    }
+
+    @Test
+    fun `importDesktopBackup replaces the database with the parsed backup`() = runTest {
+        val json = """{"exported_at":"2026-11-20T10:00:00Z","contacts":[{"id":"a","name":"Ann"},{"id":"b","name":"Bob"}],""" +
+            """"knows":[{"from_id":"a","to_id":"b","knows":{"closeness":5}}]}"""
+
+        val data = repository.importDesktopBackup(json)
+
+        assertEquals(listOf("a", "b"), data.contacts.map { it.id })
+        assertEquals(listOf(KnowsEntity("a", "b", closeness = 5)), data.knows)
+        coVerify(exactly = 1) { backupRestoreDao.replaceAll(data) }
+    }
+
+    @Test
+    fun `importDesktopBackup does not touch the database when the file is invalid`() = runTest {
+        try {
+            repository.importDesktopBackup("{broken")
+            org.junit.Assert.fail("expected BackupFormatException")
+        } catch (expected: BackupFormatException) {
+            // expected
+        }
+        coVerify(exactly = 0) { backupRestoreDao.replaceAll(any()) }
     }
 }

@@ -1,5 +1,6 @@
 package com.factotum8.networking4jandroid.data.repository
 
+import com.factotum8.networking4jandroid.data.io.BackupRestoreData
 import com.factotum8.networking4jandroid.data.io.ContactImportRow
 import com.factotum8.networking4jandroid.data.io.GraphBackupData
 import com.factotum8.networking4jandroid.data.io.ImportRowError
@@ -8,7 +9,9 @@ import com.factotum8.networking4jandroid.data.io.buildBackupJson
 import com.factotum8.networking4jandroid.data.io.contactsToCsv
 import com.factotum8.networking4jandroid.data.io.contactsToVCard
 import com.factotum8.networking4jandroid.data.io.parseCsv
+import com.factotum8.networking4jandroid.data.io.parseDesktopBackup
 import com.factotum8.networking4jandroid.data.io.parseVCard
+import com.factotum8.networking4jandroid.data.local.dao.BackupRestoreDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.EventDao
@@ -18,6 +21,8 @@ import com.factotum8.networking4jandroid.data.local.dao.RelativeDao
 import com.factotum8.networking4jandroid.data.local.dao.TagDao
 import com.factotum8.networking4jandroid.data.local.entity.ContactEntity
 import com.factotum8.networking4jandroid.data.local.entity.enums.DimensionLinkType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -46,7 +51,20 @@ class ImportExportRepository @Inject constructor(
     private val projectDao: ProjectDao,
     private val interestDao: InterestDao,
     private val tagDao: TagDao,
+    private val backupRestoreDao: BackupRestoreDao,
 ) {
+    /**
+     * Replaces the whole local database with a desktop networking4j backup
+     * (`backup_*.json`). Parsing happens fully before anything is written;
+     * a [com.factotum8.networking4jandroid.data.io.BackupFormatException]
+     * leaves the database untouched, and the write itself is one transaction.
+     */
+    suspend fun importDesktopBackup(text: String): BackupRestoreData {
+        val data = withContext(Dispatchers.Default) { parseDesktopBackup(text) }
+        backupRestoreDao.replaceAll(data)
+        return data
+    }
+
     suspend fun importCsv(text: String): ImportSummary = importRows(parseCsv(text))
 
     suspend fun importVCard(text: String): ImportSummary = importRows(parseVCard(text))

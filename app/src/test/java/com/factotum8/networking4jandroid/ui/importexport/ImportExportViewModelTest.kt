@@ -1,7 +1,11 @@
 package com.factotum8.networking4jandroid.ui.importexport
 
+import com.factotum8.networking4jandroid.data.io.BackupFormatException
+import com.factotum8.networking4jandroid.data.io.BackupRestoreData
 import com.factotum8.networking4jandroid.data.io.ImportRowError
 import com.factotum8.networking4jandroid.data.io.ImportSummary
+import com.factotum8.networking4jandroid.data.local.entity.ContactEntity
+import com.factotum8.networking4jandroid.data.local.entity.SettingsEntity
 import com.factotum8.networking4jandroid.data.repository.GraphBackup
 import com.factotum8.networking4jandroid.data.repository.ImportExportRepository
 import com.factotum8.networking4jandroid.util.MainDispatcherRule
@@ -122,5 +126,62 @@ class ImportExportViewModelTest {
         val state = viewModel.uiState.value
         assertNull(state.errorMessage)
         assertNull(state.backupMessage)
+    }
+
+    private fun restoreData(skipped: Int = 0) = BackupRestoreData(
+        contacts = listOf(ContactEntity("a", "A"), ContactEntity("b", "B")),
+        interactions = emptyList(), actions = emptyList(), relatives = emptyList(), knows = emptyList(),
+        companies = emptyList(), events = emptyList(), communities = emptyList(), projects = emptyList(),
+        interests = emptyList(), tags = emptyList(), companyLinks = emptyList(), eventLinks = emptyList(),
+        communityLinks = emptyList(), projectLinks = emptyList(), interestLinks = emptyList(), tagLinks = emptyList(),
+        settings = SettingsEntity(), skipped = skipped,
+    )
+
+    @Test
+    fun `importDesktopBackup publishes a summary with counts`() = runTest(mainDispatcherRule.dispatcher) {
+        coEvery { repository.importDesktopBackup("json") } returns restoreData(skipped = 3)
+        val viewModel = createViewModel()
+
+        viewModel.importDesktopBackup("json")
+        assertTrue(viewModel.uiState.value.importing)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.importing)
+        assertNull(state.errorMessage)
+        assertTrue(state.desktopImportMessage!!.contains("контактов 2"))
+        assertTrue(state.desktopImportMessage!!.contains("Пропущено записей: 3"))
+    }
+
+    @Test
+    fun `importDesktopBackup shows a format error to the user`() = runTest(mainDispatcherRule.dispatcher) {
+        coEvery { repository.importDesktopBackup(any()) } throws BackupFormatException("Файл не является корректным JSON")
+        val viewModel = createViewModel()
+
+        viewModel.importDesktopBackup("x")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.importing)
+        assertNull(state.desktopImportMessage)
+        assertEquals("Импорт бэкапа не выполнен: Файл не является корректным JSON", state.errorMessage)
+    }
+
+    @Test
+    fun `importDesktopBackup does not leak raw database error text`() = runTest(mainDispatcherRule.dispatcher) {
+        coEvery { repository.importDesktopBackup(any()) } throws IllegalStateException("SQLITE_CONSTRAINT detail")
+        val viewModel = createViewModel()
+
+        viewModel.importDesktopBackup("x")
+        advanceUntilIdle()
+
+        val error = viewModel.uiState.value.errorMessage!!
+        assertFalse(error.contains("SQLITE"))
+        assertTrue(error.contains("не изменены"))
+    }
+
+    @Test
+    fun `desktop import summary omits the skipped part when nothing was skipped`() {
+        assertFalse(desktopImportSummary(restoreData()).contains("Пропущено"))
     }
 }

@@ -3,6 +3,7 @@ package com.factotum8.networking4jandroid.di
 import android.content.Context
 import androidx.room.Room
 import com.factotum8.networking4jandroid.data.local.dao.ActionDao
+import com.factotum8.networking4jandroid.data.local.dao.BackupRestoreDao
 import com.factotum8.networking4jandroid.data.local.dao.CommunityDao
 import com.factotum8.networking4jandroid.data.local.dao.CompanyDao
 import com.factotum8.networking4jandroid.data.local.dao.ContactCommunityCrossRefDao
@@ -96,4 +97,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSettingsDao(database: AppDatabase): SettingsDao = database.settingsDao()
+
+    @Provides
+    fun provideBackupRestoreDao(database: AppDatabase): BackupRestoreDao = database.backupRestoreDao()
 }

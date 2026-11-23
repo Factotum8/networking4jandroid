@@ -12,10 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.factotum8.networking4jandroid.data.io.MAX_DESKTOP_BACKUP_BYTES
 import com.factotum8.networking4jandroid.data.repository.GraphBackup
 import com.factotum8.networking4jandroid.ui.common.DetailScaffold
 import com.factotum8.networking4jandroid.ui.common.MutedText
@@ -42,6 +46,8 @@ import java.time.format.DateTimeFormatter
 
 private val CSV_MIME_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text/plain")
 private val VCARD_MIME_TYPES = arrayOf("text/vcard", "text/x-vcard")
+// Some file providers report .json as octet-stream/plain text.
+private val JSON_MIME_TYPES = arrayOf("application/json", "application/octet-stream", "text/plain")
 private val BACKUP_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC)
 
 /**
@@ -63,6 +69,18 @@ fun ImportExportScreen(onBack: () -> Unit, viewModel: ImportExportViewModel = hi
     var pendingBackup by remember { mutableStateOf<GraphBackup?>(null) }
     var pendingBackupJsonName by remember { mutableStateOf<String?>(null) }
     var pendingBackupTimestamp by remember { mutableStateOf("") }
+    var confirmDesktopImport by remember { mutableStateOf(false) }
+
+    val importDesktopBackupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching { withContext(Dispatchers.IO) { readUriText(context, uri, MAX_DESKTOP_BACKUP_BYTES) } }
+                .onSuccess { viewModel.importDesktopBackup(it) }
+                .onFailure { e ->
+                    viewModel.onFileError(if (e is FileTooLargeException) "Файл слишком большой для бэкапа" else "Не удалось прочитать файл бэкапа")
+                }
+        }
+    }
 
     val importCsvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -155,6 +173,13 @@ fun ImportExportScreen(onBack: () -> Unit, viewModel: ImportExportViewModel = hi
                     if (uiState.importing) {
                         MutedText("Импорт...")
                     }
+                    OutlinedButton(
+                        onClick = { confirmDesktopImport = true },
+                        enabled = !uiState.importing,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Импорт с компьютера (бэкап JSON)") }
+                    MutedText("Файл backup_*.json из networking4j на компьютере. Заменяет все данные на телефоне.")
+                    uiState.desktopImportMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     uiState.importSummary?.let { summary ->
                         Text("Создано контактов: ${summary.created}", style = MaterialTheme.typography.bodySmall)
                         if (summary.errors.isNotEmpty()) {
@@ -200,6 +225,54 @@ fun ImportExportScreen(onBack: () -> Unit, viewModel: ImportExportViewModel = hi
             }
         }
     }
+
+    if (confirmDesktopImport) {
+        ConfirmDesktopImportDialog(
+            onDismiss = { confirmDesktopImport = false },
+            onConfirm = {
+                confirmDesktopImport = false
+                importDesktopBackupLauncher.launch(JSON_MIME_TYPES)
+            },
+        )
+    }
+}
+
+@Composable
+private fun ConfirmDesktopImportDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Заменить все данные?") },
+        text = {
+            Text(
+                "Все контакты, знакомства, связи, взаимодействия, задачи и настройки на телефоне " +
+                    "будут удалены и заменены данными из бэкапа. Отменить это нельзя — " +
+                    "при необходимости сначала сделайте бэкап телефона.",
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Заменить", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+    )
+}
+
+private class FileTooLargeException : IOException("File exceeds size limit")
+
+/** Reads at most [maxBytes]; a bigger file fails fast instead of being loaded whole into memory. */
+private fun readUriText(context: Context, uri: Uri, maxBytes: Long): String {
+    val stream = context.contentResolver.openInputStream(uri) ?: throw IOException("Cannot open $uri")
+    val bytes = stream.use { input ->
+        val buffer = java.io.ByteArrayOutputStream()
+        val chunk = ByteArray(64 * 1024)
+        var total = 0L
+        while (true) {
+            val read = input.read(chunk)
+            if (read < 0) break
+            total += read
+            if (total > maxBytes) throw FileTooLargeException()
+            buffer.write(chunk, 0, read)
+        }
+        buffer.toByteArray()
+    }
+    return bytes.toString(Charsets.UTF_8)
 }
 
 private fun readUriText(context: Context, uri: Uri): String {
