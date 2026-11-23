@@ -24,6 +24,24 @@ const val ZOOM_STEP = 1.25f
 const val ZOOM_MIN = 0.4f
 const val ZOOM_MAX = 4f
 
+/**
+ * Dimension nodes (companies/events/communities/projects/interests/tags —
+ * the purple outer ring) are hidden from the graph for now, per the user's
+ * request; flip to true to bring them back. Data and repository are unchanged.
+ */
+const val SHOW_DIMENSION_NODES = false
+
+/** Drops every non-contact node and any edge touching one. */
+fun contactsOnly(snapshot: GraphSnapshot): GraphSnapshot {
+    val contactIds = snapshot.nodes.filter { it.label == "Contact" }.mapTo(HashSet()) { it.id }
+    return snapshot.copy(
+        nodes = snapshot.nodes.filter { it.id in contactIds },
+        edges = snapshot.edges.filter { it.source in contactIds && it.target in contactIds },
+    )
+}
+
+private fun visible(snapshot: GraphSnapshot): GraphSnapshot = if (SHOW_DIMENSION_NODES) snapshot else contactsOnly(snapshot)
+
 /** Mirrors `GraphRepository`'s private `dimensionLabel()` — the graph screen only has each node's already-rendered [GraphVisNode.label] to work back from. */
 private val LABEL_TO_REL_TYPE: Map<String, DimensionLinkType> = mapOf(
     "Company" to DimensionLinkType.WORKS_AT,
@@ -91,10 +109,12 @@ class GraphViewModel @Inject constructor(
         viewModelScope.launch {
             val state = _uiState.value
             val limit = state.limitText.trim().toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_LIMIT
-            val snapshot = graphRepository.snapshot(
-                limit = limit,
-                circles = state.circleFilter?.let { listOf(it) },
-                contactTypes = state.contactTypeFilter?.let { listOf(it) },
+            val snapshot = visible(
+                graphRepository.snapshot(
+                    limit = limit,
+                    circles = state.circleFilter?.let { listOf(it) },
+                    contactTypes = state.contactTypeFilter?.let { listOf(it) },
+                ),
             )
             _uiState.update { it.copy(snapshot = snapshot, loading = false, selectedNode = null, statusText = statusFor(snapshot)) }
         }
@@ -164,7 +184,7 @@ class GraphViewModel @Inject constructor(
     /** Isolates the view on this contact's immediate neighborhood — replaces the current snapshot, doesn't merge into it. */
     fun expandNeighborhood(contactId: String) {
         viewModelScope.launch {
-            val neighborhood = graphRepository.neighbors(contactId)
+            val neighborhood = visible(graphRepository.neighbors(contactId))
             _uiState.update { it.copy(snapshot = neighborhood, selectedNode = null, statusText = statusFor(neighborhood)) }
         }
     }
@@ -174,7 +194,7 @@ class GraphViewModel @Inject constructor(
         viewModelScope.launch {
             val state = _uiState.value
             val limit = state.limitText.trim().toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_LIMIT
-            val snapshot = graphRepository.snapshot(limit = limit, dimensionFilter = relType to node.id)
+            val snapshot = visible(graphRepository.snapshot(limit = limit, dimensionFilter = relType to node.id))
             _uiState.update { it.copy(snapshot = snapshot, selectedNode = null, statusText = statusFor(snapshot)) }
         }
     }

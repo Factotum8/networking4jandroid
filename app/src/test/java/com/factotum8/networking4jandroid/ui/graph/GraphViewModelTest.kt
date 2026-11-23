@@ -7,6 +7,7 @@ import com.factotum8.networking4jandroid.data.local.entity.enums.DimensionLinkTy
 import com.factotum8.networking4jandroid.data.repository.ContactRepository
 import com.factotum8.networking4jandroid.data.repository.GraphRepository
 import com.factotum8.networking4jandroid.data.repository.GraphSnapshot
+import com.factotum8.networking4jandroid.data.repository.GraphVisEdge
 import com.factotum8.networking4jandroid.data.repository.GraphVisNode
 import com.factotum8.networking4jandroid.util.MainDispatcherRule
 import io.mockk.coEvery
@@ -285,5 +286,43 @@ class GraphViewModelTest {
 
         assertEquals(filtered, viewModel.uiState.value.snapshot)
         assertNull(viewModel.uiState.value.selectedNode)
+    }
+
+    // --- hidden dimension nodes ---
+
+    @Test
+    fun `contactsOnly drops dimension nodes and their edges but keeps KNOWS edges`() {
+        val snapshot = GraphSnapshot(
+            nodes = listOf(node("c1"), node("c2"), node("i1", label = "Interest")),
+            edges = listOf(
+                GraphVisEdge("c1-c2", "c1", "c2", "KNOWS"),
+                GraphVisEdge("c1-i1", "c1", "i1", "INTERESTED_IN"),
+            ),
+            totalContacts = 2,
+        )
+
+        val result = contactsOnly(snapshot)
+
+        assertEquals(listOf("c1", "c2"), result.nodes.map { it.id })
+        assertEquals(listOf("c1-c2"), result.edges.map { it.id })
+        assertEquals(2, result.totalContacts)
+    }
+
+    @Test
+    fun `refreshSnapshot does not show dimension nodes while they are disabled`() = runTest(mainDispatcherRule.dispatcher) {
+        val withDimension = GraphSnapshot(
+            listOf(node("c1"), node("t1", label = "Tag")),
+            listOf(GraphVisEdge("c1-t1", "c1", "t1", "TAGGED")),
+            totalContacts = 1,
+        )
+        coEvery { graphRepository.snapshot(any(), any(), any(), any()) } returns withDimension
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val shown = viewModel.uiState.value.snapshot!!
+        assertFalse(SHOW_DIMENSION_NODES)
+        assertEquals(listOf("c1"), shown.nodes.map { it.id })
+        assertTrue(shown.edges.isEmpty())
+        assertEquals("Контактов: 1", viewModel.uiState.value.statusText)
     }
 }

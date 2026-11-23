@@ -23,7 +23,17 @@ val RING_RADII: Map<Circle, Float> = mapOf(
 )
 
 const val DIMENSION_RADIUS = 470f
-private const val MAX_RADIUS = DIMENSION_RADIUS
+
+/** Node names are drawn only from this zoom level up; below it the graph is unlabeled (names via tap). */
+const val LABEL_MIN_ZOOM = 2f
+
+fun shouldShowNodeLabels(zoom: Float): Boolean = zoom >= LABEL_MIN_ZOOM
+/**
+ * Outermost radius actually drawn: the dimension ring when dimension nodes are
+ * shown, otherwise the outer contact ring — so the default view fits what's
+ * on screen instead of leaving an empty band for hidden nodes.
+ */
+val VISIBLE_OUTER_RADIUS: Float = if (SHOW_DIMENSION_NODES) DIMENSION_RADIUS else RING_RADII.values.max()
 
 /**
  * Half-width of the shared view range at a given [zoom] level — higher zoom
@@ -32,7 +42,7 @@ private const val MAX_RADIUS = DIMENSION_RADIUS
  * and drag-to-pan/pinch-to-zoom gesture handling, so panning/zooming feels
  * consistent with what's actually drawn.
  */
-fun boundForZoom(zoom: Float): Float = (MAX_RADIUS * 1.15f) / zoom
+fun boundForZoom(zoom: Float): Float = (VISIBLE_OUTER_RADIUS * 1.15f) / zoom
 
 private fun placeRing(nodes: List<GraphVisNode>, radius: Float, positions: MutableMap<String, NodePosition>) {
     val count = nodes.size

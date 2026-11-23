@@ -79,8 +79,22 @@ class GraphLayoutTest {
     }
 
     @Test
-    fun `boundForZoom at the default zoom covers the outer dimension ring with margin`() {
+    fun `boundForZoom at the default zoom covers the outermost visible ring with margin`() {
         val bound = boundForZoom(1f)
-        assertEquals(DIMENSION_RADIUS * 1.15f, bound, EPS)
+        assertEquals(VISIBLE_OUTER_RADIUS * 1.15f, bound, EPS)
+    }
+
+    @Test
+    fun `with dimension nodes hidden the view fits the outer contact ring`() {
+        val expected = if (SHOW_DIMENSION_NODES) DIMENSION_RADIUS else RING_RADII.getValue(Circle.SUCCESS_CIRCLE)
+        assertEquals(expected, VISIBLE_OUTER_RADIUS, EPS)
+    }
+
+    @Test
+    fun `node labels are hidden below 200 percent and shown from 200 percent`() {
+        assertEquals(false, shouldShowNodeLabels(1f))
+        assertEquals(false, shouldShowNodeLabels(1.95f))
+        assertEquals(true, shouldShowNodeLabels(2f))
+        assertEquals(true, shouldShowNodeLabels(ZOOM_MAX))
     }
 }

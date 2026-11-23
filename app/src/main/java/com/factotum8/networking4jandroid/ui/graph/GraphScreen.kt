@@ -290,6 +290,7 @@ private fun DrawScope.drawGraph(snapshot: GraphSnapshot, zoom: Float, panX: Floa
         )
     }
 
+    val showLabels = shouldShowNodeLabels(zoom)
     val textPaint = Paint().apply {
         color = android.graphics.Color.DKGRAY
         textSize = 28f
@@ -301,7 +302,9 @@ private fun DrawScope.drawGraph(snapshot: GraphSnapshot, zoom: Float, panX: Floa
         val isContact = node.label == "Contact"
         val radius = if (isContact) CONTACT_NODE_RADIUS_PX else DIMENSION_NODE_RADIUS_PX
         drawCircle(color = nodeColor(node), radius = radius, center = screen)
-        drawContext.canvas.nativeCanvas.drawText(node.name, screen.x + radius + 4f, screen.y + 4f, textPaint)
+        if (showLabels) {
+            drawContext.canvas.nativeCanvas.drawText(node.name, screen.x + radius + 4f, screen.y + 4f, textPaint)
+        }
     }
 }
 
