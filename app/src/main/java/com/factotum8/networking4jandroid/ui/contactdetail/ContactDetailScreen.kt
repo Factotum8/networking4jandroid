@@ -3,6 +3,8 @@ package com.factotum8.networking4jandroid.ui.contactdetail
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -122,6 +124,7 @@ fun ContactDetailScreen(contactId: String, onBack: () -> Unit, viewModel: Contac
 private val RATING_OPTIONS: List<Int?> = listOf(null) + (1..10).toList()
 private fun ratingLabel(v: Int?) = v?.toString() ?: "—"
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MainFormSection(uiState: ContactDetailUiState, viewModel: ContactDetailViewModel, onBack: () -> Unit) {
     val form = uiState.form
@@ -203,7 +206,12 @@ private fun MainFormSection(uiState: ContactDetailUiState, viewModel: ContactDet
         uiState.formError?.let { formError ->
             Text(formError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
+        // Primary action on its own full-width row: four buttons in one row
+        // overflowed on narrow phones (e.g. Pixel 9), pushing "Сохранить" off-screen.
+        Button(onClick = viewModel::save, modifier = Modifier.fillMaxWidth()) {
+            Text(if (uiState.isNew) "Создать" else "Сохранить")
+        }
+        FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
             TextButton(onClick = onBack) { Text("Назад") }
             if (!uiState.isNew) {
                 val archived = uiState.loadedContact?.archived == true
@@ -214,7 +222,6 @@ private fun MainFormSection(uiState: ContactDetailUiState, viewModel: ContactDet
                     Text("Удалить", color = MaterialTheme.colorScheme.error)
                 }
             }
-            Button(onClick = viewModel::save) { Text(if (uiState.isNew) "Создать" else "Сохранить") }
         }
     }
 }

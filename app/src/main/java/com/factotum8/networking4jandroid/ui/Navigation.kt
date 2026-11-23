@@ -36,14 +36,15 @@ import com.factotum8.networking4jandroid.ui.settings.SettingsScreen
  * The phone nav (decision #1): the source's 6-link top bar becomes a
  * bottom nav bar with 4 primary destinations, "Ещё" opening a menu for
  * the 3 secondary pages — 6 items in a bottom bar doesn't fit phone
- * width/UX guidance.
+ * width/UX guidance. The graph is the start destination and first tab
+ * (the app's home screen); the dashboard stays a regular tab.
  */
 private data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
 
 private val BOTTOM_NAV_ITEMS = listOf(
+    BottomNavItem(Routes.GRAPH, "Граф", Icons.Default.Share),
     BottomNavItem(Routes.DASHBOARD, "Дашборд", Icons.Default.Home),
     BottomNavItem(Routes.CONTACTS, "Контакты", Icons.Default.Person),
-    BottomNavItem(Routes.GRAPH, "Граф", Icons.Default.Share),
     BottomNavItem(Routes.MORE, "Ещё", Icons.Default.MoreVert),
 )
 
@@ -55,7 +56,7 @@ fun NetworkingApp() {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.DASHBOARD,
+            startDestination = Routes.GRAPH,
             modifier = Modifier.padding(padding),
         ) {
             composable(Routes.DASHBOARD) {
